@@ -25,6 +25,7 @@ let exerciseSessionSchema = new mongoose.Schema({
 })
 let userSchema = new mongoose.Schema({
   username: { type: String, required: true },
+  log: [exerciseSessionSchema]
 })
 let Session = mongoose.model("Session", exerciseSessionSchema)
 let User = mongoose.model("User", userSchema)

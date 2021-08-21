@@ -25,7 +25,7 @@ let exerciseSessionSchema = new mongoose.Schema({
 })
 let userSchema = new mongoose.Schema({
   username: { type: String, required: true },
-  log: [exerciseSessionSchema]
+  log: [exerciseSessionSchema],
 })
 let Session = mongoose.model("Session", exerciseSessionSchema)
 let User = mongoose.model("User", userSchema)
@@ -49,11 +49,44 @@ app.post(
 app.get("/api/users", (req, res) => {
   User.find({}, (err, arrayOfUsers) => {
     if (!err) {
-          res.json(arrayOfUsers)
-      }
-    })
-} )
+      res.json(arrayOfUsers)
+    }
+  })
+})
 
+app.post(
+  "/api/users/:_id/exercises",
+  bodyParser.urlencoded({ extended: false }),
+  (req, res) => {
+    let newSession = new Session({
+      description: req.body.description,
+      duration: parseInt(req.body.duration),
+      date: req.body.date,
+    })
+    if ((newSession.date === "")) {
+      newSession.date = new Date().toISOString().substring(0, 10)
+    }
+
+    User.findByIdAndUpdate(
+      req.body.id,
+      { $push: { log: newSession } },
+      { new: true },
+      (err, updatedUser) => {
+        if (!err) {
+          let respObj = {}
+          respObj["id"] = updatedUser.id
+          respObj["username"] = updatedUser.username
+          respObj["date"] = new Date(newSession.date).toDateString()
+          respObj["description"] = newSession.description
+          respObj["duration"] = newSession.duration
+          res.json(respObj)
+        } else {
+          console.log(err)
+        }
+      }
+    )
+  }
+)
 const listener = app.listen(process.env.PORT || 3000, () => {
   console.log("Your app is listening on port " + listener.address().port)
 })

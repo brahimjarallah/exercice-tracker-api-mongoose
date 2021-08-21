@@ -64,7 +64,6 @@ app.post(
       date: req.body.date || new Date().toISOString().substring(0, 10),
     })
 
-
     User.findByIdAndUpdate(
       req.body.id,
       { $push: { log: newSession } },
@@ -75,16 +74,14 @@ app.post(
           respObj["_id"] = updatedUser.id
           respObj["username"] = updatedUser.username
           respObj["date"] = new Date(newSession.date).toDateString()
-          respObj["description"] = newSession.description
           respObj["duration"] = newSession.duration
+          respObj["description"] = newSession.description
           res.json(respObj)
         }
       }
     )
   }
 )
-
-
 
 const listener = app.listen(process.env.PORT || 3000, () => {
   console.log("Your app is listening on port " + listener.address().port)

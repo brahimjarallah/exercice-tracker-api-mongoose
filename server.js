@@ -61,11 +61,15 @@ app.post(
     let newSession = new Session({
       description: req.body.description,
       duration: parseInt(req.body.duration),
-      date: req.body.date || new Date().toISOString().substring(0, 10),
+      date: req.body.date,
     })
 
+    if (newSession.date === "") {
+      newSession.date = new Date().toISOString().substring(0, 10)
+    }
+
     User.findByIdAndUpdate(
-      req.body.id,
+      req.params._id,
       { $push: { log: newSession } },
       { new: true },
       (err, updatedUser) => {

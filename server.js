@@ -31,7 +31,7 @@ let Session = mongoose.model("Session", exerciseSessionSchema)
 let User = mongoose.model("User", userSchema)
 
 app.post(
-  "/api/users",
+  "/api/exercise/new-user",
   bodyParser.urlencoded({ extended: false }),
   (req, res) => {
     let newUser = new User({ username: req.body.username })
@@ -46,7 +46,7 @@ app.post(
   }
 )
 
-app.get("/api/users", (req, res) => {
+app.get("/api/exercise/users", (req, res) => {
   User.find({}, (err, arrayOfUsers) => {
     if (!err) {
       res.json(arrayOfUsers)
@@ -55,7 +55,7 @@ app.get("/api/users", (req, res) => {
 })
 
 app.post(
-  "/api/users/:_id/exercises",
+  "/api/exercise/add",
   bodyParser.urlencoded({ extended: false }),
   (req, res) => {
     let newSession = new Session({
@@ -69,7 +69,7 @@ app.post(
     }
 
     User.findByIdAndUpdate(
-      req.params._id,
+      req.body.userId,
       { $push: { log: newSession } },
       { new: true },
       (err, updatedUser) => {
@@ -87,6 +87,43 @@ app.post(
   }
 )
 
+app.get("/api/exercise/log", (request, response) => {
+  User.findById(request.query.userId, (error, result) => {
+    if (!error) {
+      let responseObject = result
+
+      if (request.query.from || request.query.to) {
+        let fromDate = new Date(0)
+        let toDate = new Date()
+
+        if (request.query.from) {
+          fromDate = new Date(request.query.from)
+        }
+
+        if (request.query.to) {
+          toDate = new Date(request.query.to)
+        }
+
+        fromDate = fromDate.getTime()
+        toDate = toDate.getTime()
+
+        responseObject.log = responseObject.log.filter((session) => {
+          let sessionDate = new Date(session.date).getTime()
+
+          return sessionDate >= fromDate && sessionDate <= toDate
+        })
+      }
+
+      if (request.query.limit) {
+        responseObject.log = responseObject.log.slice(0, request.query.limit)
+      }
+
+      responseObject = responseObject.toJSON()
+      responseObject["count"] = result.log.length
+      response.json(responseObject)
+    }
+  })
+})
 const listener = app.listen(process.env.PORT || 3000, () => {
   console.log("Your app is listening on port " + listener.address().port)
 })
